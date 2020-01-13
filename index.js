@@ -34,27 +34,6 @@ server.get("/api/users/:id", (req, res) => {
     });
 });
 
-server.post("/api/users", (req, res) => {
-  const { name, bio } = req.body;
-  const newUser = { name, bio };
-  db.insert(newUser)
-    .then(user => {
-      if (!name || !bio) {
-        res
-          .status(400)
-          .json({ errorMessage: "Please provide name and bio for the user." });
-      } else {
-        res.status(201).json(user);
-      }
-    })
-    .catch(error => {
-      console.log("error on POST", error);
-      res
-        .status(400)
-        .json({ errorMessage: "Please provide name and bio for the user." });
-    });
-});
-
 server.delete("/api/users/:id", (req, res) => {
   const id = req.params.id;
   db.remove(id)
@@ -78,7 +57,7 @@ server.put("/api/users/:id", (req, res) => {
   const { name, bio } = req.body;
   const user = { name, bio };
   db.update(id, user)
-    .then(user => {
+    .then(edit => {
       if (!id) {
         res
           .status(404)
@@ -88,7 +67,7 @@ server.put("/api/users/:id", (req, res) => {
           .status(400)
           .json({ errorMessage: "Please provide name and bio for the user." });
       } else {
-        res.status(200).json(user);
+        res.status(200).json(edit);
       }
     })
     .catch(error => {
@@ -103,6 +82,56 @@ server.put("/api/users/:id", (req, res) => {
 //   res.send({ api: "up and running..." });
 // });
 
+server.post("/api/users", (req, res) => {
+  const { name, bio } = req.body;
+  const newUser = { name, bio };
+
+  if (name && bio) {
+    db.insert(newUser)
+      .then(addedUser => {
+        res.json(addedUser);
+        res.status(201);
+      })
+      .catch(error => {
+        res.render(error);
+        res.render.status(500).json({
+          errorMessage: "There was an error while saving the user to the database"
+        });
+      });
+  } else {
+    res.status(400).json({
+      errorMessage: "Please provide name and bio for the user."
+    });
+  }
+});
+
+
+server.post("/api/users", (req, res) => {
+  const { name, bio } = req.body;
+  const newUser = { name, bio };
+
+  if (!name || !bio) {
+    res.status(400).json({
+      errorMessage: "Please provide name and bio for the user."
+    });
+  } else {
+    db.insert(newUser)
+    .then(addedUser => {
+      res.json(addedUser);
+      res.status(201);
+    })
+    .catch(error => {
+      res.render(error);
+      res.render.status(500).json({
+        errorMessage: "There was an error while saving the user to the database"
+      });
+    });
+  }
+});
+
 server.listen(port, () => {
   console.log(`server listening on port ${port}`);
 });
+
+
+
